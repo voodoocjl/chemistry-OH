@@ -83,7 +83,7 @@ if __name__ == '__main__':
     # with open(filename, 'rb') as file:
     #     train_space = pickle.load(file)
 
-    # num_processes = 10
+    # num_processes = 1
     # size = int(len(train_space) / num_processes)
     # space = []
     # for i in range(num_processes):
@@ -94,4 +94,7 @@ if __name__ == '__main__':
 
     net = [0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 3, 7, 6, 3, 1, 1, 10, 6, 5, 6, 6, 7]
     design = translator(net)
+    s = time.time()
     report = chemistry(design)
+    e = time.time()
+    print('time:', e-s)
