@@ -59,7 +59,7 @@ def chemistry(hamiltonian, design, verbose=None):
     print(metrics)
     return report
 
-def search(train_space, index, size):
+def search(hamiltonian, train_space, index, size):
     filename = 'train_results_{}.csv'.format(index)
     if os.path.isfile(filename) == False:
         with open(filename, 'w+', newline='') as res:
@@ -74,7 +74,7 @@ def search(train_space, index, size):
         net = train_space[i]
         print('Net', j, ":", net)
         design = translator(net)       
-        report = chemistry(design)       
+        report = chemistry(hamiltonian, design)       
 
         with open(filename, 'a+', newline='') as res:
             writer = csv.writer(res)           
@@ -89,24 +89,24 @@ if __name__ == '__main__':
     with open('hamiltonian', 'rb') as outfile:
         hamiltonian = pickle.load(outfile)
           
-    # train_space = []
-    # filename = 'data/train_space_1'
+    train_space = []
+    filename = 'data/train_space_1'
 
-    # with open(filename, 'rb') as file:
-    #     train_space = pickle.load(file)
+    with open(filename, 'rb') as file:
+        train_space = pickle.load(file)
 
-    # num_processes = 1
-    # size = int(len(train_space) / num_processes)
-    # space = []
-    # for i in range(num_processes):
-    #     space.append(train_space[i*size : (i+1)*size]) 
+    num_processes = 10
+    size = int(len(train_space) / num_processes)
+    space = []
+    for i in range(num_processes):
+        space.append(train_space[i*size : (i+1)*size]) 
     
-    # with mp.Pool(processes = num_processes) as pool:
-    #     pool.starmap(search, [(space[i], i, size) for i in range(num_processes)])
+    with mp.Pool(processes = num_processes) as pool:
+        pool.starmap(search, [(hamiltonian, space[i], i, size) for i in range(num_processes)])
     
        
 
-    net = [0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 3, 7, 6, 3, 1, 1, 10, 6, 5, 6, 6, 7]
-    design = translator(net)   
-    report = chemistry(hamiltonian, design, 'print')
+    # net = [0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 3, 7, 6, 3, 1, 1, 10, 6, 5, 6, 6, 7]
+    # design = translator(net)   
+    # report = chemistry(hamiltonian, design, 'print')
     
