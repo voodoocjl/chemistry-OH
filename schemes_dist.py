@@ -10,13 +10,22 @@ import torch.multiprocessing as mp
 import pennylane as qml
 from math import pi
 
-def display(metrics):
-    print("\nTest mae: {}".format(metrics['mae']))
+def get_time(f):
+        def inner(*arg,**kwarg):
+            s_time = time.time()
+            res = f(*arg,**kwarg)
+            e_time = time.time()
+            print('Time：{}'.format(round((e_time - s_time), 2)))
+            return res
+        return inner
 
-def chemistry(design):
+@get_time
+def chemistry(design, verbose=None):
     seeds = [20, 21, 30, 33, 36, 42, 43, 55, 67, 170]
 
     args = Arguments()
+    lr = args.qlr
+
     symbols = ["O", "H"]
     coordinates = np.array([[0.0, 0.0, 0.0], [0.45, -0.1525, -0.8454]])
 
@@ -33,13 +42,14 @@ def chemistry(design):
     energy = []
     for i in range(10):
         np.random.seed(seeds[i])
-        # print('seed:', seeds[i])
+        if verbose: print('seed:', seeds[i])
         q_params = 2 * pi * np.random.rand(design['layer_repe'] * args.n_qubits * 2)
-        opt = qml.GradientDescentOptimizer(stepsize=0.1)
+        opt = qml.GradientDescentOptimizer(stepsize = lr)
+        # opt = qml.AdamOptimizer(stepsize=0.01, beta1=0.9, beta2=0.99, eps=1e-08)
 
-        for n in range(50):
+        for n in range(100):
             q_params, prev_energy = opt.step_and_cost(cost_fn, q_params)
-            # print(f"--- Step: {n}, Energy: {cost_fn(q_params):.8f}")
+            if verbose: print(f"--- Step: {n}, Energy: {cost_fn(q_params):.8f}")
         energy.append(cost_fn(q_params))
     
     metrics = np.mean(energy)
@@ -61,11 +71,8 @@ def search(train_space, index, size):
     while len(train_space) > 0:
         net = train_space[i]
         print('Net', j, ":", net)
-        design = translator(net)
-        s = time.time()
-        report = chemistry(design)
-        e = time.time()
-        print('time:', e-s)
+        design = translator(net)       
+        report = chemistry(design)       
 
         with open(filename, 'a+', newline='') as res:
             writer = csv.writer(res)           
@@ -77,24 +84,24 @@ def search(train_space, index, size):
 
 if __name__ == '__main__':
           
-    # train_space = []
-    # filename = 'data/train_space_1'
+    train_space = []
+    filename = 'data/train_space_1'
 
-    # with open(filename, 'rb') as file:
-    #     train_space = pickle.load(file)
+    with open(filename, 'rb') as file:
+        train_space = pickle.load(file)
 
-    # num_processes = 1
-    # size = int(len(train_space) / num_processes)
-    # space = []
-    # for i in range(num_processes):
-    #     space.append(train_space[i*size : (i+1)*size]) 
+    num_processes = 10
+    size = int(len(train_space) / num_processes)
+    space = []
+    for i in range(num_processes):
+        space.append(train_space[i*size : (i+1)*size]) 
     
-    # with mp.Pool(processes = num_processes) as pool:
-    #     pool.starmap(search, [(space[i], i, size) for i in range(num_processes)])   
+    with mp.Pool(processes = num_processes) as pool:
+        pool.starmap(search, [(space[i], i, size) for i in range(num_processes)])
+    
+       
 
-    net = [0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 3, 7, 6, 3, 1, 1, 10, 6, 5, 6, 6, 7]
-    design = translator(net)
-    s = time.time()
-    report = chemistry(design)
-    e = time.time()
-    print('time:', e-s)
+    # net = [0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 3, 7, 6, 3, 1, 1, 10, 6, 5, 6, 6, 7]
+    # design = translator(net)   
+    # report = chemistry(design, 'print')
+    
