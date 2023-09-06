@@ -172,8 +172,6 @@ states*/
 pred.csv
 test
 data/*.csv
-train_space_1
-train_space_2
 *.csv
 data/validation
 data/chemistry_dataset - 副本
