@@ -20,7 +20,7 @@ def get_time(f):
         return inner
 
 @get_time
-def chemistry(design, verbose=None):
+def chemistry(hamiltonian, design, verbose=None):
     seeds = [20, 21, 30, 33, 36, 42, 43, 55, 67, 170]
 
     args = Arguments()
@@ -30,7 +30,9 @@ def chemistry(design, verbose=None):
     coordinates = np.array([[0.0, 0.0, 0.0], [0.45, -0.1525, -0.8454]])
 
 # Building the molecular hamiltonian for the trihydrogen cation
-    hamiltonian, qubits = qml.qchem.molecular_hamiltonian(symbols, coordinates, charge=1)
+    # hamiltonian, qubits = qml.qchem.molecular_hamiltonian(symbols, coordinates, charge=1)
+
+    
 
     dev = qml.device("lightning.qubit", wires=args.n_qubits)
     @qml.qnode(dev, diff_method="adjoint")
@@ -83,25 +85,28 @@ def search(train_space, index, size):
 
 
 if __name__ == '__main__':
+
+    with open('hamiltonian', 'rb') as outfile:
+        hamiltonian = pickle.load(outfile)
           
-    train_space = []
-    filename = 'data/train_space_1'
+    # train_space = []
+    # filename = 'data/train_space_1'
 
-    with open(filename, 'rb') as file:
-        train_space = pickle.load(file)
+    # with open(filename, 'rb') as file:
+    #     train_space = pickle.load(file)
 
-    num_processes = 10
-    size = int(len(train_space) / num_processes)
-    space = []
-    for i in range(num_processes):
-        space.append(train_space[i*size : (i+1)*size]) 
+    # num_processes = 1
+    # size = int(len(train_space) / num_processes)
+    # space = []
+    # for i in range(num_processes):
+    #     space.append(train_space[i*size : (i+1)*size]) 
     
-    with mp.Pool(processes = num_processes) as pool:
-        pool.starmap(search, [(space[i], i, size) for i in range(num_processes)])
+    # with mp.Pool(processes = num_processes) as pool:
+    #     pool.starmap(search, [(space[i], i, size) for i in range(num_processes)])
     
        
 
-    # net = [0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 3, 7, 6, 3, 1, 1, 10, 6, 5, 6, 6, 7]
-    # design = translator(net)   
-    # report = chemistry(design, 'print')
+    net = [0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 3, 7, 6, 3, 1, 1, 10, 6, 5, 6, 6, 7]
+    design = translator(net)   
+    report = chemistry(hamiltonian, design, 'print')
     
