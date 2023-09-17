@@ -10,6 +10,12 @@ import torch.multiprocessing as mp
 import pennylane as qml
 from math import pi
 
+def net2str(net):
+        net_str = ''
+        for i in range(len(net)):
+              net_str += str(net[i])
+        return net_str
+
 def get_time(f):
         def inner(*arg,**kwarg):
             s_time = time.time()
@@ -20,7 +26,7 @@ def get_time(f):
         return inner
 
 @get_time
-def chemistry(hamiltonian, design, verbose=None):
+def chemistry(hamiltonian, design, net, verbose=None):
     seeds = [20, 21, 30, 33, 36, 42, 43, 55, 67, 170]
 
     args = Arguments()
@@ -42,7 +48,7 @@ def chemistry(hamiltonian, design, verbose=None):
    
     energy = []
     for i in range(1):
-        np.random.seed(seeds[5])
+        np.random.seed(seeds[5])  #42
         if verbose: print('seed:', seeds[i])
         q_params = 2 * pi * np.random.rand(design['layer_repe'] * args.n_qubits * 2)
         opt = qml.GradientDescentOptimizer(stepsize = lr)
@@ -57,17 +63,21 @@ def chemistry(hamiltonian, design, verbose=None):
     report = {'energy': metrics}
     print(metrics)
 
-    with open('NoiseModel/fakekolkata.pkl', 'rb') as file:
-        noise_model = pickle.load(file)
-    import qiskit_aer.noise as noise
-    noise_model1 = noise.NoiseModel()
-    noise_modelreal = noise_model1.from_dict(noise_model)
-    dev = qml.device('qiskit.aer', wires=args.n_qubits,  noise_model=noise_modelreal)
-    @qml.qnode(dev)
-    def cost_noise(theta):
-        quantum_net(theta, design)
-        return qml.expval(hamiltonian)    
-    print("Noise:", cost_noise(q_params))
+    filename = 'model/' + net
+    with open(filename, 'wb') as file:
+        pickle.dump([report, q_params], file)
+
+    # with open('NoiseModel/fakekolkata.pkl', 'rb') as file:
+    #     noise_model = pickle.load(file)
+    # import qiskit_aer.noise as noise
+    # noise_model1 = noise.NoiseModel()
+    # noise_modelreal = noise_model1.from_dict(noise_model)
+    # dev = qml.device('qiskit.aer', wires=args.n_qubits,  noise_model=noise_modelreal)
+    # @qml.qnode(dev)
+    # def cost_noise(theta):
+    #     quantum_net(theta, design)
+    #     return qml.expval(hamiltonian)    
+    # print("Noise:", cost_noise(q_params))
 
     return report
 
@@ -86,7 +96,7 @@ def search(hamiltonian, train_space, index, size):
         net = train_space[i]
         print('Net', j, ":", net)
         design = translator(net)       
-        report = chemistry(hamiltonian, design)       
+        report = chemistry(hamiltonian, design, net2str(net))       
 
         with open(filename, 'a+', newline='') as res:
             writer = csv.writer(res)           
@@ -101,24 +111,28 @@ if __name__ == '__main__':
     with open('data/OHhamiltonian', 'rb') as outfile:
         hamiltonian = pickle.load(outfile)
           
-    # train_space = []
-    # filename = 'data/train_space_1'
+    train_space = []
+    filename = 'data/train_space_1'
 
-    # with open(filename, 'rb') as file:
-    #     train_space = pickle.load(file)
+    with open(filename, 'rb') as file:
+        train_space = pickle.load(file)
 
-    # num_processes = 10
-    # size = int(len(train_space) / num_processes)
-    # space = []
-    # for i in range(num_processes):
-    #     space.append(train_space[i*size : (i+1)*size]) 
+    num_processes = 10
+    size = int(len(train_space) / num_processes)
+    space = []
+    for i in range(num_processes):
+        space.append(train_space[i*size : (i+1)*size]) 
     
-    # with mp.Pool(processes = num_processes) as pool:
-    #     pool.starmap(search, [(hamiltonian, space[i], i, size) for i in range(num_processes)])
+    with mp.Pool(processes = num_processes) as pool:
+        pool.starmap(search, [(hamiltonian, space[i], i, size) for i in range(num_processes)])
     
-       
+    
 
-    net = [0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 3, 7, 6, 3, 1, 1, 10, 6, 5, 6, 6, 7]
-    design = translator(net)   
-    report = chemistry(hamiltonian, design, 'print')
+    # net = [0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 3, 7, 6, 3, 1, 1, 10, 6, 5, 6, 6, 7]
+    # design = translator(net)
+    # net = net2str(net)   
+    # report = chemistry(hamiltonian, design, net, 'print')
+        
+    # with open('model/'+ net, 'rb') as file:
+    #     a = pickle.load(file)
     
