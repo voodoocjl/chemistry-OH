@@ -63,7 +63,7 @@ def chemistry(hamiltonian, design, net, verbose=None):
     report = {'energy': metrics}
     print(metrics)
 
-    filename = 'model/' + net
+    filename = 'models/' + net
     with open(filename, 'wb') as file:
         pickle.dump([report, q_params], file)
 
@@ -116,6 +116,10 @@ if __name__ == '__main__':
 
     with open(filename, 'rb') as file:
         train_space = pickle.load(file)
+    
+    model_path = 'models'
+    if os.path.exists(model_path) == False:
+        os.makedirs(model_path)
 
     num_processes = 10
     size = int(len(train_space) / num_processes)
@@ -133,6 +137,6 @@ if __name__ == '__main__':
     # net = net2str(net)   
     # report = chemistry(hamiltonian, design, net, 'print')
         
-    # with open('model/'+ net, 'rb') as file:
+    # with open('models/'+ net, 'rb') as file:
     #     a = pickle.load(file)
     
