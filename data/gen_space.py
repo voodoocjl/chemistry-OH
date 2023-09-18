@@ -1,15 +1,29 @@
 import pickle
 import random
+import os, json
 
 # with open('search_space_3', 'rb') as file:
 #     search_space = pickle.load(file)
 # # random.shuffle(search_space)
 # print(len(search_space))
 
-# with open('search_space_1', 'rb') as file:
-#     search_space_1 = pickle.load(file)
-# # random.shuffle(search_space)
-# print(len(search_space_1))
+dir_path = os.path.dirname(os.path.realpath(__file__))
+dataset_file = os.path.join(dir_path, 'dataset_OH')
+
+with open(dataset_file, 'rb') as file:
+    dataset = pickle.load(file)
+# random.shuffle(search_space)
+print(len(dataset))
+
+search_space = []
+for arch, mae in dataset.items():
+    code = json.loads(arch)
+    if code not in search_space:
+        search_space.append(code)
+
+with open('data/search_space_OH', 'wb') as file:
+    pickle.dump(search_space, file)
+
 # j = 0
 # k = 0
 # for i in search_space:    
@@ -18,19 +32,9 @@ import random
 #     k+=1
 #     print(k)
 
-with open('search_space', 'rb') as file:
-    search_space = pickle.load(file)
-# random.shuffle(search_space)
+# search_space = search_space.append(search_space_1)
 
-# training_data = search_space[:10000]
 
-# with open('train_space_1', 'wb') as file:
-#     pickle.dump(training_data, file)
-
-training_data = search_space[40000:100000]
-
-with open('data/train_space_3', 'wb') as file:
-    pickle.dump(training_data, file)
 
 # with open('search_space_shuffle', 'wb') as file:
 #     pickle.dump(search_space, file)
