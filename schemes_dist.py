@@ -26,7 +26,7 @@ def get_time(f):
         return inner
 
 @get_time
-def chemistry(hamiltonian, design, net, verbose=None):
+def chemistry(hamiltonian, design, net, rate = 100, verbose=None):
     seeds = [20, 21, 30, 33, 36, 42, 43, 55, 67, 170]
 
     args = Arguments()
@@ -54,7 +54,7 @@ def chemistry(hamiltonian, design, net, verbose=None):
         opt = qml.GradientDescentOptimizer(stepsize = lr)
         # opt = qml.AdamOptimizer(stepsize=0.01, beta1=0.9, beta2=0.99, eps=1e-08)
 
-        for n in range(100):
+        for n in range(rate):
             q_params, prev_energy = opt.step_and_cost(cost_fn, q_params)
             if verbose: print(f"--- Step: {n}, Energy: {cost_fn(q_params):.8f}")
         energy.append(cost_fn(q_params))
@@ -121,12 +121,12 @@ def search(hamiltonian, train_space, index, size):
         j += 1
         i += 1
 
-def run(net):
+def run(net, rate=None):
     with open('data/OHhamiltonian', 'rb') as outfile:
         hamiltonian = pickle.load(outfile)
     design = translator(net)
     net = net2str(net)   
-    report = chemistry(hamiltonian, design, net)
+    report = chemistry(hamiltonian, design, net, rate)
 
 if __name__ == '__main__':
 
