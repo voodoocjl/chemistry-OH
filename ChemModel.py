@@ -16,15 +16,17 @@ def translator(net):
     p = net[12:24]
 
     # num of layer repetitions
-    layer_repe = 2
+    layer_repe = 1
     updated_design['layer_repe'] = layer_repe
 
     # categories of single-qubit parametric gates
     for i in range(args.n_qubits):
         if q[i] == 0:
             category = 'Rx'
-        else:
+        elif q[i] == 1:
             category = 'Ry'
+        else:
+            category = 'None'        
         updated_design['rot' + str(i)] = category
 
     # categories and positions of entangled gates
@@ -33,9 +35,11 @@ def translator(net):
         #     category = 'IsingXX'
         # else:
         #     category = 'IsingZZ'
-        if j == p[j]:
+        if p[j] == j:
             updated_design['enta' + str(j)] = (12)
-        else:
+        elif p[j] == 'n':
+            updated_design['enta' + str(j)] = 'None'
+        else:        
             updated_design['enta' + str(j)] = ([j, p[j]])
 
     updated_design['total_gates'] = len(q) + len(p)
@@ -49,13 +53,14 @@ def quantum_net(q_params, design):
         for j in range(args.n_qubits):
             if current_design['rot' + str(j)] == 'Rx':
                 qml.RX(q_weights[layer][j][0], wires=j)
-            else:
+            elif current_design['rot' + str(j)] == 'Ry':
                 qml.RY(q_weights[layer][j][0], wires=j)
             
-            if current_design['enta' + str(j)] == 12:
-                qml.RZ(q_weights[layer][j][1], wires=j)
-            else:           
-                qml.IsingZZ(q_weights[layer][j][1], wires=current_design['enta' + str(j)])
+            if current_design['enta' + str(j)] != 'None':
+                if current_design['enta' + str(j)] == 12:
+                    qml.RZ(q_weights[layer][j][1], wires=j)
+                else:           
+                    qml.IsingZZ(q_weights[layer][j][1], wires=current_design['enta' + str(j)])
 
 
 

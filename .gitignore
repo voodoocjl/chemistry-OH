@@ -178,5 +178,5 @@ data/chemistry_dataset - 副本
 test_network_incremental.py
 Network_old.py
 Untitled.ipynb
-model/
+models/
 schemes_dist.py

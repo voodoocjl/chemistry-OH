@@ -81,6 +81,21 @@ def chemistry(hamiltonian, design, net, verbose=None):
 
     return report
 
+def mask(net, positions = None):
+    if positions:
+         single = positions[0]
+         double = positions[1]
+         for i in single:
+              net[i] = 'n'
+         for i in double:
+              net[12 + i] = 'n'
+    else:
+        mask = [random.sample(range(1, 12), 4), random.sample(range(12, 24), 6)]
+        for i in range(2):
+            for j in range(len(mask[i])):
+                net[mask[i][j]] = 'n'
+    return net
+
 def search(hamiltonian, train_space, index, size):
     filename = 'train_results_{}.csv'.format(index)
     if os.path.isfile(filename) == False:
@@ -94,6 +109,7 @@ def search(hamiltonian, train_space, index, size):
 
     while len(train_space) > 0:
         net = train_space[i]
+        net = mask(net)
         print('Net', j, ":", net)
         design = translator(net)       
         report = chemistry(hamiltonian, design, net2str(net))       
@@ -133,6 +149,12 @@ if __name__ == '__main__':
     
 
     # net = [0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 3, 7, 6, 3, 1, 1, 10, 6, 5, 6, 6, 7]
+    # mask = [random.sample(range(1, 12), 6), random.sample(range(12, 24), 6)]
+    # for i in range(2):
+    #      for j in range(len(mask[i])):
+    #           net[mask[i][j]] = 'n'
+    # print(net)
+    # net = [0, 0, 0, 0, 1, 'n', 0, 1, 'n', 'n', 0, 'n', 'n', 'n', 6, 3, 'n', 1, 'n', 7, 'n', 6, 'n', 7]
     # design = translator(net)
     # net = net2str(net)   
     # report = chemistry(hamiltonian, design, net, 'print')
