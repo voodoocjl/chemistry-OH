@@ -121,6 +121,12 @@ def search(hamiltonian, train_space, index, size):
         j += 1
         i += 1
 
+def run(net):
+    with open('data/OHhamiltonian', 'rb') as outfile:
+        hamiltonian = pickle.load(outfile)
+    design = translator(net)
+    net = net2str(net)   
+    report = chemistry(hamiltonian, design, net)
 
 if __name__ == '__main__':
 
